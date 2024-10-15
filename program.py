@@ -5,18 +5,33 @@ from decouple import config
 import logging
 import asyncio
 
-async def main():
+
+# async def main():
+#     logging.basicConfig(
+#         level=logging.INFO,
+#         filename="{:%d-%m-%Y}".format(datetime.now()) + '.log',
+#         filemode='w')
+#     dbRepository = DbRepository('assistant_database.db')
+#     # dbRepository.initTables()
+#     assistantBot = AssistantBot(dbRepository)
+#     targetChannelIds = dbRepository.getTargetChannelUsernames()
+#     logging.info('MODE: realtimeObservation')
+#     for targetChannelId in targetChannelIds:
+#         await assistantBot.processOldMessages(targetChannelId)
+#
+#
+# asyncio.run(main())
+
+
+def main():
     logging.basicConfig(
         level=logging.INFO,
         filename="{:%d-%m-%Y}".format(datetime.now()) + '.log',
         filemode='w')
     dbRepository = DbRepository('assistant_database.db')
-    #dbRepository.initTables()
     assistantBot = AssistantBot(dbRepository)
-    processOld = config('PROCESS_OLD')
-    if(processOld):
-        targetChannelIds = dbRepository.getTargetChannelUsernames()
-        for targetChannelId in targetChannelIds:
-            await assistantBot.processOldMessages(targetChannelId)
+    logging.info('MODE: realtimeObservation')
+    assistantBot.beginObservation()
 
-asyncio.run(main())
+
+main()

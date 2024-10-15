@@ -52,7 +52,7 @@ class AssistantBot:
                 roomsCount == '2' or roomsCount == '3' or roomsCount == '2в3')): return True;
         return False
 
-    async def processMessage(self, message: Message):
+    async def processMessage(self, message: Message) -> bool:
         if self.isMessageValid(message):
             messageDbKey = str(message.id) + '@' + message.chat.username
             if (self.dbRepository.checkMessageIdExist(messageDbKey)): return
@@ -66,16 +66,21 @@ class AssistantBot:
             await self.telegramClient.send_message(self.forwardChat.id,
                                                    f'Дата публикации: {message.date:%Y-%m-%d %H:%M:%S%z}')
             self.dbRepository.addMessageId(messageDbKey)
+            return True
+        return False
 
     async def processOldMessages(self, targetChatId: str):
         if self.isInit == False: await self.initBot()
         await self.telegramClient.start()
         async for message in self.telegramClient.get_chat_history(targetChatId):
             if (message.date < self.searchToDate): break
-            await self.processMessage(message)
+            messageWasForward = await self.processMessage(message)
+            if(messageWasForward): await asyncio.sleep(15)
         await self.telegramClient.stop()
 
-    async def beginObservation(self):
-        @self.telegramClient.on_message(filters.caption)
+    def beginObservation(self):
+        @self.telegramClient.on_message(filters.channel)
         async def echo_handler(client: Client, message: Message):
-            await client.send_message(chat_id=message.chat.id, text=f'Повторяю: {message.text}')
+            messageWasForward = await self.processMessage(message)
+            if (messageWasForward): await asyncio.sleep(2)
+        self.telegramClient.run()
