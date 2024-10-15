@@ -12,6 +12,7 @@ __pycache__/
 *.session-journal
 
 # Distribution / packaging
+.idea/
 .Python
 build/
 develop-eggs/
