@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+*.db
+*.log
+*.session
+*.session-journal
+
 # Distribution / packaging
 .Python
 build/
