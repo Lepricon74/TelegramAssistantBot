@@ -14,7 +14,6 @@ def getPrice(input: str) -> int | None:
 def getRoomCount(input: str) -> str | None:
     return getValueByKeyWord(input, r'[К,к]омнат', r'(\dв\d)|(\d){1,1}')
 
-
 def getValueByKeyWord(input: str, keyWordSearcExpr: str, valueSearchExpr: str) -> int | str | None:
     hasPriceKeyWord = re.search(keyWordSearcExpr, input)
     if (hasPriceKeyWord):

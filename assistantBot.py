@@ -48,8 +48,8 @@ class AssistantBot:
             if (priceOrNone): price = priceOrNone
             roomsCountOrNone = getRoomCount(row)
             if (roomsCountOrNone): roomsCount = roomsCountOrNone
-        if (price >= 600 and price <= 900 and (
-                roomsCount == '2' or roomsCount == '3' or roomsCount == '2в3')): return True;
+        if (price >= 600 and price <= 1000 and (
+                roomsCount == '3' or roomsCount == '2в3')): return True;
         return False
 
     async def processMessage(self, message: Message) -> bool:
