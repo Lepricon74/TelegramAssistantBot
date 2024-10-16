@@ -14,11 +14,7 @@ async def main():
     dbRepository = DbRepository('assistant_database.db')
     # dbRepository.initTables()
     assistantBot = AssistantBot(dbRepository)
-    targetChannelIds = dbRepository.getTargetChannelUsernames()
-    logging.info('MODE: realtimeObservation')
-    for targetChannelId in targetChannelIds:
-        await assistantBot.processOldMessages(targetChannelId)
-
+    await assistantBot.processOldMessagesInKnownChannels()
 
 asyncio.run(main())
 
