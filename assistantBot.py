@@ -108,6 +108,8 @@ class AssistantBot:
         dictByUsernames = {}
         for targetChannelId in targetChannelIds:
             (forwardedMessages, totalProcesedMessagesByChannel) = await self.processOldMessages(targetChannelId)
+            # среднее кол-во сообщений в группе - 8
+            totalProcesedMessagesByChannel = int(totalProcesedMessagesByChannel / 8)
             totalForwardedCount += forwardedMessages
             totalProcesedMessages += totalProcesedMessagesByChannel
             dictByUsernames[targetChannelId] = (forwardedMessages, totalProcesedMessagesByChannel)
