@@ -4,7 +4,7 @@ from pyrogram import Client, filters
 from decouple import config
 from pyrogram.types import Message
 from dbRepository import DbRepository
-from regexHelper import getPrice, getRoomCount
+from regexHelper import getPrice, getRoomCount, getFloor
 import logging
 import asyncio
 import re
@@ -45,19 +45,22 @@ class AssistantBot:
         rows = re.split(";|,|\n", message.caption)
         price = 10000
         roomsCount = ""
+        floor = 0
         for row in rows:
             priceOrNone = getPrice(row)
             if (priceOrNone): price = priceOrNone
             roomsCountOrNone = getRoomCount(row)
             if (roomsCountOrNone): roomsCount = roomsCountOrNone
-        if (price >= 600 and price <= 1000 and (
+            floorCountOrNone = getFloor(row)
+            if (floorCountOrNone): floor = floorCountOrNone
+        if (floor > 1 and price >= 600 and price <= 1000 and (
                 roomsCount == '3' or roomsCount == '2в3')): return True;
         return False
 
     async def processMessage(self, message: Message) -> bool:
         if self.isMessageValid(message):
             messageDbKey = str(message.id) + '@' + message.chat.username
-            if (self.dbRepository.checkMessageIdExist(messageDbKey)): return
+            if (self.dbRepository.checkMessageIdExist(messageDbKey)): return False
             try:
                 mediaGroupMessages = await self.telegramClient.get_media_group(message.chat.username, message.id)
                 messagesIdsToForward = list(map(lambda x: x.id, mediaGroupMessages))
@@ -79,16 +82,18 @@ class AssistantBot:
             return True
         return False
 
-    async def processOldMessages(self, targetChatId: str) -> int:
+    async def processOldMessages(self, targetChatId: str) -> Tuple[int, int]:
         if self.isInit == False: await self.initBot()
         forwardMessageCounter = 0
+        totalMessages = 0
         async for message in self.telegramClient.get_chat_history(targetChatId):
             if (message.date < self.searchToDate): break
             messageWasForward = await self.processMessage(message)
             if (messageWasForward):
                 forwardMessageCounter += 1
                 await asyncio.sleep(8)
-        return forwardMessageCounter
+            totalMessages += 1
+        return (forwardMessageCounter, totalMessages)
 
     async def processOldMessagesInKnownChannels(self):
         if self.isInit == False: await self.initBot()
@@ -98,19 +103,22 @@ class AssistantBot:
                                                f'Начинаю поиск подходящих объявлений за период: \n'
                                                f'<b>{self.searchToDate:%Y-%m-%d %H:%M:%S%z}</b> - \n'
                                                f'<b>{datetime.now():%Y-%m-%d %H:%M:%S%z}</b>')
-        totalCount = 0
+        totalForwardedCount = 0
+        totalProcesedMessages = 0
         dictByUsernames = {}
         for targetChannelId in targetChannelIds:
-            forwardedMessages = await self.processOldMessages(targetChannelId)
-            totalCount += forwardedMessages
-            dictByUsernames[targetChannelId] = forwardedMessages
+            (forwardedMessages, totalProcesedMessagesByChannel) = await self.processOldMessages(targetChannelId)
+            totalForwardedCount += forwardedMessages
+            totalProcesedMessages += totalProcesedMessagesByChannel
+            dictByUsernames[targetChannelId] = (forwardedMessages, totalProcesedMessagesByChannel)
         dictStatStr = ''
         for key in dictByUsernames:
-            dictStatStr += f't.me/{key} - {dictByUsernames[key]}\n'
-        resultLog = (f'Обработаны объявления за период:\n<b>{self.searchToDate:%Y-%m-%d %H:%M:%S%z}</b> - \n<b>{datetime.now():%Y-%m-%d %H:%M:%S%z}</b>\n\n'
-                     'Статистика по каналам:\n'
-                     f'{dictStatStr}\n\n'
-                     f'Всего найдено <b>{totalCount}</b> подходящих объявлений')
+            dictStatStr += f't.me/{key} - {dictByUsernames[key][0]}/{dictByUsernames[key][1]}\n'
+        resultLog = (
+            f'Обработаны объявления за период:\n<b>{self.searchToDate:%Y-%m-%d %H:%M:%S%z}</b> - \n<b>{datetime.now():%Y-%m-%d %H:%M:%S%z}</b>\n\n'
+            'Статистика по каналам найдено/обработано:\n'
+            f'{dictStatStr}\n\n'
+            f'Всего обработано <b>{totalProcesedMessages}</b> объявлений, среди них найдено <b>{totalForwardedCount}</b> подходящих по критериям')
         await self.telegramClient.send_message(self.forwardChat.id, resultLog)
         await self.telegramClient.stop()
 

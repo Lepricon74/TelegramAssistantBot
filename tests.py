@@ -1,6 +1,6 @@
 from typing import Callable, List, Generic, Tuple
 
-from regexHelper import getPrice, getRoomCount
+from regexHelper import getPrice, getRoomCount, getFloor
 
 testCases: List[Tuple[List[Tuple[str, int | str]], Callable[[str], None | int | str]]] = [
     (
@@ -41,6 +41,21 @@ testCases: List[Tuple[List[Tuple[str, int | str]], Callable[[str], None | int | 
             ("Комнат-abc", None),
         ],
         lambda x: getRoomCount(x)
+    ),
+    (
+        [
+            ("🏢14-этаж", 14),
+            ("💮Этаж-4", 4),
+            ("🔸Этаж: 42", 1),
+            ("2этаж", 2),
+            ("99-этаж", 99),
+            ("0: этаж", 0),
+            ("4-этажка", None),
+            ("🏢9-этажное", None),
+            ("9этажное", None),
+            ("здание 9-этажей", None),
+        ],
+        lambda x: getFloor(x)
     )
 ]
 
