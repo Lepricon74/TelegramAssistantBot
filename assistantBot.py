@@ -11,7 +11,7 @@ import re
 
 
 class AssistantBot:
-    searchToDate = datetime(2024, 10, 15, 11, 0, 0)
+    searchToDate = datetime(2024, 10, 18, 11, 0, 0)
     forwardChatTitle = 'ApartmentSearchAssistantTest'
     forwardChat = None
     telegramClient = None
